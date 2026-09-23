@@ -23,24 +23,6 @@
     },
     "controllerradial:wheel_edit": {
       "button": "controlify:button/north"
-    },
-    "controllerradial:gui_drag": {
-      "button": "controlify:button/right_stick"
-    },
-    "controllerradial:map_right_click": {
-      "axis": "controlify:axis/right_trigger"
-    },
-    "controllerradial:map_nudge_up": {
-      "button": "controlify:button/dpad_up"
-    },
-    "controllerradial:map_nudge_down": {
-      "button": "controlify:button/dpad_down"
-    },
-    "controllerradial:map_nudge_left": {
-      "button": "controlify:button/dpad_left"
-    },
-    "controllerradial:map_nudge_right": {
-      "button": "controlify:button/dpad_right"
     }
   }
 }

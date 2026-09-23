@@ -27,7 +27,7 @@ public class SmokeTest {
     private static final Path RESOURCES = Path.of(System.getProperty("cr.resources", "src/main/resources"));
     private static final Path JAR = resolveJar();
 
-    /** Bindings that ship with a default input; the map extras deliberately start unbound. */
+    /** Bindings that ship with a default input. */
     private static final List<String> BINDING_DEFAULTS = List.of(
             "controllerradial:wheel_open",
             "controllerradial:wheel_axis_up",
@@ -36,13 +36,7 @@ public class SmokeTest {
             "controllerradial:wheel_axis_right",
             "controllerradial:wheel_prev",
             "controllerradial:wheel_next",
-            "controllerradial:wheel_edit",
-            "controllerradial:gui_drag",
-            "controllerradial:map_right_click",
-            "controllerradial:map_nudge_up",
-            "controllerradial:map_nudge_down",
-            "controllerradial:map_nudge_left",
-            "controllerradial:map_nudge_right");
+            "controllerradial:wheel_edit");
 
     private static final List<String> BINDING_IDS = List.of(
             "controllerradial:wheel_open",
@@ -52,19 +46,7 @@ public class SmokeTest {
             "controllerradial:wheel_axis_right",
             "controllerradial:wheel_prev",
             "controllerradial:wheel_next",
-            "controllerradial:wheel_edit",
-            "controllerradial:map_axis_up",
-            "controllerradial:map_axis_down",
-            "controllerradial:map_axis_left",
-            "controllerradial:map_axis_right",
-            "controllerradial:map_nudge_up",
-            "controllerradial:map_nudge_down",
-            "controllerradial:map_nudge_left",
-            "controllerradial:map_nudge_right",
-            "controllerradial:map_zoom_in",
-            "controllerradial:map_zoom_out",
-            "controllerradial:map_right_click",
-            "controllerradial:gui_drag");
+            "controllerradial:wheel_edit");
 
     public static void main(String[] args) throws Exception {
         section("Controlify entrypoint wiring");
@@ -95,7 +77,7 @@ public class SmokeTest {
         if (Files.isRegularFile(binds)) {
             JsonObject defaults = JsonParser.parseReader(new FileReader(binds.toFile()))
                     .getAsJsonObject().getAsJsonObject("defaults");
-            check("defaults cover exactly our bound-by-default bindings", defaults.keySet().equals(new java.util.TreeSet<>(BINDING_DEFAULTS)));
+            check("defaults cover exactly our bindings", defaults.keySet().equals(new java.util.TreeSet<>(BINDING_DEFAULTS)));
             check("hold-to-open uses a button, not a trigger (no clash with 'use')",
                     "controlify:button/dpad_right".equals(inputOf(defaults, "controllerradial:wheel_open", "button")));
             check("selection uses the RIGHT stick up", "controlify:axis/right_stick_up".equals(inputOf(defaults, "controllerradial:wheel_axis_up", "axis")));
@@ -106,17 +88,8 @@ public class SmokeTest {
             check("next preset uses RB", "controlify:button/right_shoulder".equals(inputOf(defaults, "controllerradial:wheel_next", "button")));
             check("edit-in-place uses a free face button",
                     "controlify:button/north".equals(inputOf(defaults, "controllerradial:wheel_edit", "button")));
-            check("cursor and zoom bindings stay unbound, because Controlify already covers them",
-                    !defaults.has("controllerradial:map_axis_up")
-                            && !defaults.has("controllerradial:map_zoom_in")
-                            && !defaults.has("controllerradial:map_zoom_out"));
-            check("right click is bound to the right trigger",
-                    "controlify:axis/right_trigger".equals(inputOf(defaults, "controllerradial:map_right_click", "axis")));
-            check("menu nudging is bound to the dpad",
-                    "controlify:button/dpad_up".equals(inputOf(defaults, "controllerradial:map_nudge_up", "button"))
-                            && "controlify:button/dpad_right".equals(inputOf(defaults, "controllerradial:map_nudge_right", "button")));
-            check("drag is bound to a button Controlify leaves free in screens",
-                    "controlify:button/right_stick".equals(inputOf(defaults, "controllerradial:gui_drag", "button")));
+            check("the map/generic-mouse bindings are gone",
+                    defaults.keySet().stream().noneMatch(key -> key.contains("map_") || key.contains("gui_drag")));
         }
 
         section("language keys");
@@ -137,12 +110,6 @@ public class SmokeTest {
                         "controlify.binding.controllerradial.wheel_next",
                         "controlify.binding.controllerradial.wheel_edit",
                         "controlify.binding.controllerradial.wheel_edit.desc",
-                        "controlify.binding.controllerradial.map_right_click",
-                        "controlify.binding.controllerradial.map_right_click.desc",
-                        "controlify.binding.controllerradial.gui_drag",
-                        "controlify.binding.controllerradial.gui_drag.desc",
-                        "controlify.binding.controllerradial.map_zoom_in",
-                        "controlify.binding.controllerradial.map_nudge_down",
                         "controllerradial.wheel.title",
                         "controllerradial.wheel.hint",
                         "controllerradial.wheel.pages_hint",
@@ -543,42 +510,6 @@ public class SmokeTest {
                 (java.util.function.Predicate<int[]>) cell -> cell[1] >= 240 - 20);
         check("a cell is never placed off the bottom", small == null || small[1] + 20 <= 240 - 8);
 
-        section("map controls");
-        Class<?> mapClass = Class.forName("com.controllerradial.MapInput");
-        Method looksLikeMap = mapClass.getDeclaredMethod("looksLikeMapScreen", String.class);
-        looksLikeMap.setAccessible(true);
-        Method stickDelta = mapClass.getDeclaredMethod("stickDelta", float.class);
-        stickDelta.setAccessible(true);
-        Method clampCursor = mapClass.getDeclaredMethod("clampCursor", double.class, int.class);
-        clampCursor.setAccessible(true);
-
-        check("the fullscreen map is recognised",
-                (boolean) looksLikeMap.invoke(null, "xaero.map.gui.GuiMap"));
-        check("xaero's other screens are recognised too",
-                (boolean) looksLikeMap.invoke(null, "xaero.common.gui.GuiMinimapSettings"));
-        check("vanilla screens are not",
-                !(boolean) looksLikeMap.invoke(null, "net.minecraft.client.gui.screens.TitleScreen"));
-        check("a missing screen is not", !(boolean) looksLikeMap.invoke(null, (Object) null));
-        check("a look-alike package is not matched by accident",
-                !(boolean) looksLikeMap.invoke(null, "com.example.xaero.map.GuiMap"));
-
-        check("a centred stick does not move the cursor",
-                Math.abs((double) stickDelta.invoke(null, 0.0f)) < 0.001);
-        check("a slightly off-centre stick is ignored (deadzone)",
-                Math.abs((double) stickDelta.invoke(null, 0.15f)) < 0.001);
-        check("full deflection gives the full speed",
-                Math.abs((double) stickDelta.invoke(null, 1.0f) - 14.0) < 0.001);
-        check("the direction follows the stick",
-                (double) stickDelta.invoke(null, -1.0f) < 0.0
-                        && (double) stickDelta.invoke(null, 1.0f) > 0.0);
-        check("partial deflection is slower than full",
-                (double) stickDelta.invoke(null, 0.6f) < (double) stickDelta.invoke(null, 1.0f));
-
-        check("the cursor cannot leave the window (top left)",
-                (double) clampCursor.invoke(null, -50.0, 800) == 0.0);
-        check("the cursor cannot leave the window (bottom right)",
-                (double) clampCursor.invoke(null, 5000.0, 800) == 799.0);
-
         section("wheel naming");
         Class<?> presetClass2 = Class.forName("com.controllerradial.WheelPreset");
         Object namedPreset = presetClass2.getDeclaredConstructor(String.class).newInstance("战斗");
@@ -708,9 +639,6 @@ public class SmokeTest {
                         "com/controllerradial/WheelKeyPresses.class",
                         "com/controllerradial/ControlsScreenHook.class",
                         "com/controllerradial/WheelLayout.class",
-                        "com/controllerradial/MapSupport.class",
-                        "com/controllerradial/MapInput.class",
-                        "com/controllerradial/MapSupport.class",
                         "com/controllerradial/WheelPresetNameScreen.class")) {
                     check("jar contains " + entry, zip.getEntry(entry) != null);
                 }

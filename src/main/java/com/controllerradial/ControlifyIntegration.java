@@ -21,7 +21,6 @@ public class ControlifyIntegration implements ControlifyEntrypoint {
     @Override
     public void onControlifyInit(InitContext context) {
         WheelBindings.register(context.bindings());
-        MapSupport.register(context.bindings());
         // Fires before Controlify handles its in-game key binds, so when this wheel and Controlify's
         // own radial menu share a button, ours opens (theirs then sees a screen already open).
         ControlifyEvents.CONTROLLER_STATE_UPDATE.register(
