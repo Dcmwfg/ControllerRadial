@@ -1,0 +1,16 @@
+# Keep line endings consistent for everyone
+* text=auto
+
+# Shell scripts must keep LF even on Windows checkouts
+*.sh text eol=lf
+gradlew text eol=lf
+
+*.java text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.properties text eol=lf
+
+# Binaries
+*.jar binary
+*.png binary

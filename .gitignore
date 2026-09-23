@@ -1,0 +1,17 @@
+# Gradle
+.gradle/
+build/
+
+# Dev runs
+run/
+logs/
+
+# IDE
+.idea/
+*.iml
+.eclipse/
+.vscode/
+
+# Compile-time dependencies (third-party mods, do not redistribute:
+# download Controlify into libs/ yourself before building)
+libs/

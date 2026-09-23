@@ -1,0 +1,107 @@
+plugins {
+    id 'java-library'
+    id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
+}
+
+version = "${mod_version}+mc${minecraft_version}"
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-forge"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    withSourcesJar()
+}
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'MinecraftForge'
+        url = 'https://maven.minecraftforge.net/'
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // Soft dependency on Controlify (Forge 1.20.1 "forgified" port).
+    // Not bundled: the player supplies the real jar at runtime.
+    compileOnly files('libs/controlify-forgified-2.1.9-mc1.20.1-forge.jar')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+// Headless self-check: no Minecraft instance, no controller needed.
+// `gradlew smokeTest` verifies the Controlify entrypoint wiring, the controller defaults,
+// the language keys, the stick-to-slot maths and the packaged jar.
+sourceSets {
+    smoketest {
+        java.srcDir 'smoketest'
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        // The Controlify jar is compileOnly for the mod, so add it here explicitly to run the check.
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath + files('libs/controlify-forgified-2.1.9-mc1.20.1-forge.jar')
+    }
+}
+
+tasks.register('smokeTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs the headless self-check for this mod.'
+    dependsOn tasks.named('smoketestClasses'), tasks.named('reobfJar')
+    classpath = sourceSets.smoketest.runtimeClasspath
+    mainClass = 'SmokeTest'
+    systemProperty 'cr.resources', layout.projectDirectory.dir('src/main/resources').asFile.absolutePath
+    doFirst {
+        // reobfJar renames the jar in place, so the jar task's output is the shipped file
+        systemProperty 'cr.jar', tasks.jar.archiveFile.get().asFile.absolutePath
+    }
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    from('LICENSE')
+    inputs.property 'version', project.version
+    inputs.property 'mod_id', project.mod_id
+    inputs.property 'mod_name', project.mod_name
+    inputs.property 'mod_license', project.mod_license
+    inputs.property 'mod_authors', project.mod_authors
+    inputs.property 'mod_description', project.mod_description
+    inputs.property 'minecraft_version_range', project.minecraft_version_range
+    inputs.property 'forge_version_range', project.forge_version_range
+    inputs.property 'loader_version_range', project.loader_version_range
+
+    filesMatching('META-INF/mods.toml') {
+        expand(
+                version: project.version,
+                mod_id: project.mod_id,
+                mod_name: project.mod_name,
+                mod_license: project.mod_license,
+                mod_authors: project.mod_authors,
+                mod_description: project.mod_description,
+                minecraft_version_range: project.minecraft_version_range,
+                forge_version_range: project.forge_version_range,
+                loader_version_range: project.loader_version_range
+        )
+    }
+}

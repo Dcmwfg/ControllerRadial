@@ -1,0 +1,46 @@
+{
+  "defaults": {
+    "controllerradial:wheel_open": {
+      "button": "controlify:button/dpad_right"
+    },
+    "controllerradial:wheel_axis_up": {
+      "axis": "controlify:axis/right_stick_up"
+    },
+    "controllerradial:wheel_axis_down": {
+      "axis": "controlify:axis/right_stick_down"
+    },
+    "controllerradial:wheel_axis_left": {
+      "axis": "controlify:axis/right_stick_left"
+    },
+    "controllerradial:wheel_axis_right": {
+      "axis": "controlify:axis/right_stick_right"
+    },
+    "controllerradial:wheel_prev": {
+      "button": "controlify:button/left_shoulder"
+    },
+    "controllerradial:wheel_next": {
+      "button": "controlify:button/right_shoulder"
+    },
+    "controllerradial:wheel_edit": {
+      "button": "controlify:button/north"
+    },
+    "controllerradial:gui_drag": {
+      "button": "controlify:button/right_stick"
+    },
+    "controllerradial:map_right_click": {
+      "axis": "controlify:axis/right_trigger"
+    },
+    "controllerradial:map_nudge_up": {
+      "button": "controlify:button/dpad_up"
+    },
+    "controllerradial:map_nudge_down": {
+      "button": "controlify:button/dpad_down"
+    },
+    "controllerradial:map_nudge_left": {
+      "button": "controlify:button/dpad_left"
+    },
+    "controllerradial:map_nudge_right": {
+      "button": "controlify:button/dpad_right"
+    }
+  }
+}
